@@ -1,0 +1,447 @@
+{
+    "graph_0": {
+        "_type": "graph",
+        "format": "torch",
+        "nodes": [
+            {
+                "name": "conv1",
+                "id": 2895868345312,
+                "class_name": "conv3(\n  (conv1): Conv2d(2, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))\n  (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1))\n  (conv3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1))\n)",
+                "parameters": [
+                    [
+                        "conv1.weight",
+                        [
+                            128,
+                            2,
+                            3,
+                            3
+                        ]
+                    ],
+                    [
+                        "conv1.bias",
+                        [
+                            128
+                        ]
+                    ],
+                    [
+                        "conv2.weight",
+                        [
+                            128,
+                            128,
+                            3,
+                            3
+                        ]
+                    ],
+                    [
+                        "conv2.bias",
+                        [
+                            128
+                        ]
+                    ],
+                    [
+                        "conv3.weight",
+                        [
+                            128,
+                            128,
+                            3,
+                            3
+                        ]
+                    ],
+                    [
+                        "conv3.bias",
+                        [
+                            128
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        128,
+                        26,
+                        26
+                    ]
+                ],
+                "num_parameters": [
+                    2304,
+                    128,
+                    147456,
+                    128,
+                    147456,
+                    128
+                ]
+            },
+            {
+                "name": "conv2",
+                "id": 2895179165424,
+                "class_name": "conv3(\n  (conv1): Conv2d(2, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))\n  (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1))\n  (conv3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1))\n)",
+                "parameters": [
+                    [
+                        "conv1.weight",
+                        [
+                            128,
+                            2,
+                            3,
+                            3
+                        ]
+                    ],
+                    [
+                        "conv1.bias",
+                        [
+                            128
+                        ]
+                    ],
+                    [
+                        "conv2.weight",
+                        [
+                            128,
+                            128,
+                            3,
+                            3
+                        ]
+                    ],
+                    [
+                        "conv2.bias",
+                        [
+                            128
+                        ]
+                    ],
+                    [
+                        "conv3.weight",
+                        [
+                            128,
+                            128,
+                            3,
+                            3
+                        ]
+                    ],
+                    [
+                        "conv3.bias",
+                        [
+                            128
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        128,
+                        26,
+                        26
+                    ]
+                ],
+                "num_parameters": [
+                    2304,
+                    128,
+                    147456,
+                    128,
+                    147456,
+                    128
+                ]
+            },
+            {
+                "name": "elstm1",
+                "id": 2895868345872,
+                "class_name": "e_lstm(\n  (lstm1): LSTM(128, 128, batch_first=True)\n)",
+                "parameters": [
+                    [
+                        "lstm1.weight_ih_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.weight_hh_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_ih_l0",
+                        [
+                            512
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_hh_l0",
+                        [
+                            512
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        128
+                    ]
+                ],
+                "num_parameters": [
+                    65536,
+                    65536,
+                    512,
+                    512
+                ]
+            },
+            {
+                "name": "elstm2",
+                "id": 2895180777064,
+                "class_name": "e_lstm(\n  (lstm1): LSTM(128, 128, batch_first=True)\n)",
+                "parameters": [
+                    [
+                        "lstm1.weight_ih_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.weight_hh_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_ih_l0",
+                        [
+                            512
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_hh_l0",
+                        [
+                            512
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        128
+                    ]
+                ],
+                "num_parameters": [
+                    65536,
+                    65536,
+                    512,
+                    512
+                ]
+            },
+            {
+                "name": "hlstm1",
+                "id": 2895569161296,
+                "class_name": "h_lstm(\n  (lstm1): LSTM(128, 128, batch_first=True)\n)",
+                "parameters": [
+                    [
+                        "lstm1.weight_ih_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.weight_hh_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_ih_l0",
+                        [
+                            512
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_hh_l0",
+                        [
+                            512
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        677,
+                        128
+                    ]
+                ],
+                "num_parameters": [
+                    65536,
+                    65536,
+                    512,
+                    512
+                ]
+            },
+            {
+                "name": "hlstm2",
+                "id": 2895868346096,
+                "class_name": "h_lstm(\n  (lstm1): LSTM(128, 128, batch_first=True)\n)",
+                "parameters": [
+                    [
+                        "lstm1.weight_ih_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.weight_hh_l0",
+                        [
+                            512,
+                            128
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_ih_l0",
+                        [
+                            512
+                        ]
+                    ],
+                    [
+                        "lstm1.bias_hh_l0",
+                        [
+                            512
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        678,
+                        128
+                    ]
+                ],
+                "num_parameters": [
+                    65536,
+                    65536,
+                    512,
+                    512
+                ]
+            },
+            {
+                "name": "fc1",
+                "id": 2895868346208,
+                "class_name": "Linear(in_features=640, out_features=512, bias=True)",
+                "parameters": [
+                    [
+                        "weight",
+                        [
+                            512,
+                            640
+                        ]
+                    ],
+                    [
+                        "bias",
+                        [
+                            512
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        512
+                    ]
+                ],
+                "num_parameters": [
+                    327680,
+                    512
+                ]
+            },
+            {
+                "name": "fc2",
+                "id": 2895868346264,
+                "class_name": "Linear(in_features=512, out_features=256, bias=True)",
+                "parameters": [
+                    [
+                        "weight",
+                        [
+                            256,
+                            512
+                        ]
+                    ],
+                    [
+                        "bias",
+                        [
+                            256
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        256
+                    ]
+                ],
+                "num_parameters": [
+                    131072,
+                    256
+                ]
+            },
+            {
+                "name": "fc3",
+                "id": 2895868346320,
+                "class_name": "Linear(in_features=256, out_features=256, bias=True)",
+                "parameters": [
+                    [
+                        "weight",
+                        [
+                            256,
+                            256
+                        ]
+                    ],
+                    [
+                        "bias",
+                        [
+                            256
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        256
+                    ]
+                ],
+                "num_parameters": [
+                    65536,
+                    256
+                ]
+            },
+            {
+                "name": "fc4",
+                "id": 2895868686408,
+                "class_name": "Linear(in_features=256, out_features=1, bias=True)",
+                "parameters": [
+                    [
+                        "weight",
+                        [
+                            1,
+                            256
+                        ]
+                    ],
+                    [
+                        "bias",
+                        [
+                            1
+                        ]
+                    ]
+                ],
+                "output_shape": [
+                    [
+                        1,
+                        1
+                    ]
+                ],
+                "num_parameters": [
+                    256,
+                    1
+                ]
+            }
+        ],
+        "edges": []
+    }
+}
