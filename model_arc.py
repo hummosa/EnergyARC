@@ -89,7 +89,7 @@ class conv3(nn.Module):
         # a1 = torch.randn(size = [ self.batch_size, self.out_channels ] ) 
 
         a = softmax_this(a)
-        out = torch.mul(out, a.unsqueeze(1).unsqueeze(2))
+        out = torch.mul(out, a.unsqueeze(2).unsqueeze(2))
         
         return out
 
@@ -101,7 +101,7 @@ class e_lstm(nn.Module):
         
     def forward(self, inputs, w):
         out = inputs.view([inputs.shape[0], self.channels_out, -1])
-        out = torch.cat([w.view([1, -1, 1]), out], dim=2)
+        out = torch.cat([w.view([out.shape[0], -1, 1]), out], dim=2)
         out = out.permute( [0, 2, 1])
         output_lstm, hidden = self.lstm1(out)
         # hidden is a tuple of (last output, last hidden state), last output has [batch, seq (=1), lstm dim]
@@ -117,7 +117,7 @@ class h_lstm(nn.Module):
         
     def forward(self, inputs, w):
         out = inputs.view([inputs.shape[0], self.channels_out, -1])
-        out = torch.cat([w.view([1, -1, 1]), out], dim=2)
+        out = torch.cat([w.view([out.shape[0], -1, 1]), out], dim=2)
         out = out.permute( [0, 2, 1])
         
         out, _ = self.lstm1(out)  # take all outputs for all conv locations
@@ -149,9 +149,9 @@ class Ereason(nn.Module):
 
     def forward(self, inputs, latents):
 
-        a0 = latents[0]
-        a1 = latents[1]
-        w = latents[2]
+        a0 = latents[:,0]
+        a1 = latents[:,1]
+        w = latents[:,2]
 
         c0 = self.conv1(inputs[0], a0)
         c1 = self.conv2(inputs[1], a1)
@@ -166,12 +166,16 @@ class Ereason(nn.Module):
         e0 = self.elstm1(c0, w)
         e1 = self.elstm2(c1, w)
 
+        # ? why??? e0 has shape   [1, batch, channels_out ]
+        e0.squeeze_()
+        e1.squeeze_()
+        
         # translation: TODO 
         # h0 = self.hlstm1( c0, w )
         # h1 = self.hlstm2( h0, w) #lstm with attention 
                 
 
-        out = torch.cat([e0, e1, latents.view([1,-1])], dim=1)
+        out = torch.cat([e0, e1, latents.view([inputs[0].shape[0],-1])], dim=1)
         
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))
