@@ -66,11 +66,11 @@ def spectral_norm(module, init=True, std=1, bound=False):
     return module
 
 class conv3(nn.Module):
-    def __init__(self):
+    def __init__(self, channels_out):
         super().__init__()
-        self.channels_out = 128
+        self.channels_out = channels_out
         # self.conv1 = spectral_norm(nn.Conv2d(1, self.channels_out, 3, padding=1), std=1)
-        self.conv1 = nn.Conv2d(2 , self.channels_out, padding=1, kernel_size=3)
+        self.conv1 = nn.Conv2d(3 , self.channels_out, padding=0, kernel_size=3)
         self.conv2 = nn.Conv2d(self.channels_out, self.channels_out, padding=0, kernel_size=3, stride=2)
         self.conv3 = nn.Conv2d(self.channels_out, self.channels_out, padding=0, kernel_size=3)
         # self.conv2_drop = nn.Dropout2d()
@@ -94,9 +94,9 @@ class conv3(nn.Module):
         return out
 
 class e_lstm(nn.Module):
-    def __init__(self):
+    def __init__(self, channels_out):
         super().__init__()
-        self.channels_out = 128
+        self.channels_out = channels_out
         self.lstm1 = nn.LSTM(self.channels_out, self.channels_out, batch_first = True)
         
     def forward(self, inputs, w):
@@ -110,9 +110,9 @@ class e_lstm(nn.Module):
         return out
 
 class h_lstm(nn.Module):
-    def __init__(self):
+    def __init__(self, channels_out):
         super().__init__()
-        self.channels_out = 128
+        self.channels_out = channels_out
         self.lstm1 = nn.LSTM(self.channels_out, self.channels_out, batch_first = True)
         
     def forward(self, inputs, w):
@@ -130,17 +130,17 @@ def softmax_this(input, beta = 1.):
 	return (input)
 
 class Ereason(nn.Module):
-    def __init__(self, batch_size = 1, channels_out = 128):
+    def __init__(self, channels_out = 128, wandb_use=False):
         super().__init__()
+        self.wandb_use = wandb_use
         self.channels_out = channels_out
-        self.batch_size = batch_size
 
-        self.conv1 = conv3()
-        self.conv2 = conv3()
-        self.elstm1 = e_lstm()
-        self.elstm2 = e_lstm()
-        self.hlstm1 = h_lstm()
-        self.hlstm2 = h_lstm()
+        self.conv1 =  conv3 (self.channels_out)
+        self.conv2 =  conv3 (self.channels_out)
+        self.elstm1 = e_lstm(self.channels_out)
+        self.elstm2 = e_lstm(self.channels_out)
+        self.hlstm1 = h_lstm(self.channels_out)
+        self.hlstm2 = h_lstm(self.channels_out)
 
         self.fc1 = nn.Linear(self.channels_out*5, 256)
         self.fc2 = nn.Linear(256, 64)
@@ -156,16 +156,13 @@ class Ereason(nn.Module):
         c0 = self.conv1(inputs[0], a0)
         c1 = self.conv2(inputs[1], a1)
 
-        # ## init w, if not provided
-        # if w: 
-        #    assert (w.shape == tensor.shape([out.shape[0], 1, self.channels_out])) 
-        # else: # if w is not provided, initizlie from a random normal.
-        #     w = torch.randn(size=[out.shape[0],1, self.channels_out])
-
         #get embeddings
         e0 = self.elstm1(c0, w)
         e1 = self.elstm2(c1, w)
-
+        if self.wandb_use: wandb.Histogram({
+            'e0': e0,
+            'e1': e1
+            })
         # ? why??? e0 has shape   [1, batch, channels_out ]
         e0.squeeze_()
         e1.squeeze_()
@@ -174,7 +171,6 @@ class Ereason(nn.Module):
         # h0 = self.hlstm1( c0, w )
         # h1 = self.hlstm2( h0, w) #lstm with attention 
                 
-
         out = torch.cat([e0, e1, latents.view([inputs[0].shape[0],-1])], dim=1)
         
         out = F.relu(self.fc1(out))

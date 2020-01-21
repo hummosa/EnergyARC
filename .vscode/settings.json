@@ -1,5 +1,6 @@
 {
-    "python.pythonPath": "C:\\Users\\Ali\\Anaconda3\\envs\\drlnd\\python.exe",
+    "python.pythonPath": "/home/ali/anaconda3/bin/python",
     "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
+    "python.linting.enabled": true,
+    "git.ignoreLimitWarning": true
 }

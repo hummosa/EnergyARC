@@ -16,7 +16,7 @@ def stats(var):
     var = np.array(var)
   elif type(var) == type(np.array([])):
     pass #if already a numpy array, just keep going.
-  else: #assume tf.var
-    var = var.numpy()
+  else: #assume torch tensor
+    var = var.detach().cpu().numpy()
      
   print('Mean, {:2.5f}, var {:2.5f}, min {:2.3f}, max {:2.3f}'.format(var.mean(), var.var(), var.min(), var.max()))

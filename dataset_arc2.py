@@ -15,7 +15,7 @@ for tj in training_json:
         data = json.load(f)
         train.append(data)
 # %%
-# data['test'][0]['input']
+data['test'][0]['input']
 # %%
 # 
 # plt.imshow(data['train'][0]['output'])
@@ -36,6 +36,11 @@ sizes_x = [(len(xx)) for xx in items]
 sizes_y = [(len(xx[0])) for xx in items]
 #%
 
+
+# %%
+sizes_x ==sizes_y
+
+# %%
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -86,25 +91,8 @@ class ARCDataset(Dataset):
         self.inputs = self.tasks[0]
         self.outputs = self.tasks[1]
 
-        for i, task in enumerate(self.inputs):
-             self.inputs[i] = self.transform(task)
-        for i, task in enumerate(self.outputs):
-             self.outputs[i] = self.transform(task)
-
-        self.inputs = [torch.stack(demos) for demos in self.inputs]
-        self.inputs = torch.stack(self.inputs)
-        self.outputs = [torch.stack(demos) for demos in self.outputs]
-        self.outputs = torch.stack(self.outputs)
-
     def __len__(self):
-        return len(self.inputs)
-
-    def __getitem__(self, idx):
-        # if torch.is_tensor(idx):
-        #     idx = idx.tolist()
-
-        sample = (self.inputs[idx], self.outputs[idx])
-        return sample
+        return len(self.tasks)
 
     def __load_split(self, split_dir):
         tasks = []
@@ -140,61 +128,86 @@ class ARCDataset(Dataset):
             
         return (inputs,outputs)
 
+    def __getitem__(self, idx):
+        # if torch.is_tensor(idx):
+        #     idx = idx.tolist()
+
+        sample = self.tasks[idx]
+        
+        # if self.transform:
+            # sample = self.transform(sample)
+
+        return sample
 
 # %%
 class Preprocess(object):
     """ Converts task inputs and outputs to tensors, but leaves the outer list structure"""
 
-    def __call__(self, sample):
-        inputs = sample
+    def __call__(self, sample, device='cuda'):
+        # these functions were not updated and they process demos as a tuple of lists
+        # in the end these will be reshaped into list of tuples at the last transform,
+        inputs, outputs = sample[0], sample[1]
 
+        # for t task in enumerate(inputs):
         for i, inp in enumerate(inputs):
             inputs[i] = torch.tensor(inp, dtype=torch.float32) ## convert to Tensor
-            # inputs[i] = inputs[i]/10.  # normalize
+            inputs[i] = inputs[i]/10.  # normalize
             inputs[i] = inputs[i].unsqueeze(0) #  channels dim
+                
 
-        return inputs
+        # for t task in enumerate(outputs):
+        for i, inp in enumerate(outputs):
+            outputs[i] = torch.tensor(inp, dtype=torch.float32) ## convert to Tensor
+            outputs[i] = outputs[i]/10.  # normalize
+            outputs[i] = outputs[i].unsqueeze(0) # addand channels dim
+        return (inputs, outputs)
 
 class Padded_with_mask(object):
     """ Pads all inputs and outputs to a 30x30 but adds another channel with a mask"""
 
-    def __call__(self, sample, pad=30):
+    def __call__(self, sample, pad=30, device='cuda'):
+        # these functions were not updated and they process demos as a tuple of lists
+        # in the end these will be reshaped into list of tuples at the last transform,
+        inputs, outputs = sample[0], sample[1]
 
-        inputs = sample
+        # for t task in enumerate(inputs):
         for i, inp in enumerate(inputs):
-            canvas = torch.ones([ 1, pad, pad]) * 10. 
-            # pad_mask = torch.zeros([ 1, pad, pad])
+            canvas = torch.zeros([ 1, pad, pad])
+            pad_mask = torch.zeros([ 1, pad, pad])
             canvas[ 0, :inp.shape[1], :inp.shape[2]] = inp 
-            # pad_mask[ 0, :inp.shape[1], :inp.shape[2]] = torch.ones_like(inp)
-            # canvas = map(convert_to_rgb, canvas.view([-1])).view([3, pad,pad])
-            canvas = list(map(convert_to_rgb, torch.unbind(canvas.view([-1]) )  ))
-            canvas = torch.stack(canvas)
-            inputs[i] = canvas.view([pad, pad, 3]).permute([2,0,1]) 
+            pad_mask[ 0, :inp.shape[1], :inp.shape[2]] = torch.ones_like(inp)
+            inputs[i] = torch.cat([canvas, pad_mask], dim=0) #concat at the channel dim [batch, channel, h, w]
 
-        return inputs
+    # for t task in enumerate(outputs):
+        for i, inp in enumerate(outputs):
+            canvas = torch.zeros([1, pad, pad])
+            pad_mask = torch.zeros([1, pad, pad])
+            canvas[ 0, :inp.shape[1], :inp.shape[2]] = inp 
+            pad_mask[ 0, :inp.shape[1], :inp.shape[2]] = torch.ones_like(inp)
+            outputs[i] = torch.cat([canvas, pad_mask], dim=0) #concat at the channel dim [batch, channel, h, w]
+        # ipdb.set_trace()
+        return (inputs, outputs)
 
 class Padded_no_of_demos(object):
-    """ Pads tasks with demo pairs duplicates"""
+    """ Pads tasks with demo pairs made of zeros"""
     def __init__(self, no_of_demos):
         self.no_of_demos = no_of_demos
         super(self.__class__, self).__init__()
 
-    def __call__(self, sample):
-        inputs = sample
+    def __call__(self, sample, device='cuda'):
+        inputs, outputs = sample[0], sample[1]
         no_of_demos = self.no_of_demos
         li = len(inputs)
-        
-        #padd up to no_of_demos
+        lo = len(outputs)
         if li < no_of_demos:
             for it in range(no_of_demos-li):
-                inputs.append(inputs[it])
-                # inputs.append(torch.zeros(size=[2, 30, 30]))
-        
-        # limit anything above no_of_demos
-        inputs = inputs[:no_of_demos]
+                inputs.append(torch.zeros(size=[2, 30, 30]))
+        if lo < no_of_demos:
+            for it in range(no_of_demos-lo):
+                outputs.append(torch.zeros(size=[2, 30, 30]))
 
         # Transforms from tuplie of lists to list of tuples. Each input output demo example is a tuple. 
-        return inputs
+        return (inputs, outputs)
         # return ([(i, o) for i, o in zip(inputs, outputs)])
 
 
@@ -219,60 +232,30 @@ def sample_data(loader):
             loader_iter = iter(loader)
             yield next(loader_iter)
 
-#%%
 
-# Load as 9 channels
-# layernorm??
-# drop out?
-# 
-colors = {  0: [0., 0., 0.],  #black
-            1: [0., 0., 1.],  #blue
-            2: [1., 0., 0.],  #red
-            3: [0., 1., 0.],  #green
-            4: [1., 1., 0.],  #yellow
-            5: [.7, .6, .5], #?grey
-            6: [1., 0., 1.],  #magenta
-            7: [.5, .5, .1],  #?orange?
-            8: [0., 1., 1.],  #cyan
-            9: [.5, .1, .1],  #?maroon
-            10:[1., 1., 1.], #mask
-            }
-def convert_to_rgb(c):
-    return torch.tensor(colors[c.item()]) #add item() to get the data from a zero dim tensor.
-
-import time
-print('started dataset: {}'.format(time.clock()))
-# dataset = ARCDataset('./ARC/data/', 'training', transform= all_transforms,no_of_demos=6) #, transform=transforms.Normalize(0., 10.)
-# loader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=0) # Error: Couldn't open shared event, when workers is 4, hmmm but also 1
-# from tqdm import tqdm
+dataset = ARCDataset('./ARC/data/', 'both', transform= all_transforms) #, transform=transforms.Normalize(0., 10.)
+loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=1) # Error: Couldn't open shared event, when workers is 4, hmmm but also 1
 # loader = tqdm(enumerate(sample_data(loader)))
 
 # loader_iter = iter(loader)
-# # #%%
-# enum, n = next(loader_iter)
-# n[0].shape # n[0] is inputs and n[1] is outputs
+# n = next(loader_iter)
 
-# torch.Size([128, 6, 2, 30, 30])
-#%%
-def show_task(inputs, outputs, channels_first=True):
-    fig = plt.figure(figsize=[8,17],facecolor=(0, 0, 0))
-    no_of_demos = (inputs.shape[0])
-    for i, (inp, out) in enumerate( zip(inputs, outputs)):
-        subplot = plt.subplot(no_of_demos+1,2, 2*i+1)
-        channels = np.argmin(inp.shape)
-        if channels_first:
-            inp = inp.permute([ 1, 2, 0])
-            out = out.permute([ 1, 2, 0])
-        plt.imshow(inp)
-        plt.title('demo ' +str(i)+ ' q', color='w')
-        plt.axis('off')
-        subplot = plt.subplot(no_of_demos+1,2, 2*i+2)
-        plt.imshow(out)
-        plt.title('demo ' +str(i)+ ' ans', color='w')
-        plt.axis('off')
-    return fig
 
-#%%
-# show_task(n[0][2], n[1][2])   
-
-# %%
+# So now self.tasks has dims [task ID, 0 for inputs 1 for outputs, example ID, channels, height, width]
+# it is a list of tuples. Each entry is a task. The tuple is its inputs and outputs, with the demo/test merged.
+# dlist(self.tasks)
+# 800
+# 2
+# 4
+# 2
+# 30
+# 30
+# but if using a DataLoader and iterater it appropriately adds a batch dim right before channels.
+# dlist(n)
+# 2
+# 4
+# 1
+# 2
+# 30
+# 30
+#But batching throgh the dataloader still does not work, it only knows tensors and will batch the first dim of tensor and ignore the list structure.
