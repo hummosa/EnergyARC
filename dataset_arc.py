@@ -83,8 +83,8 @@ class ARCDataset(Dataset):
         # for i, task in enumerate(self.tasks):
         #     self.tasks[i] = self.transform(task)
 
-        self.inputs = self.tasks[0]
-        self.outputs = self.tasks[1]
+        self.inputs = self.tasks[0][:64]  # ! process only two batches
+        self.outputs = self.tasks[1][:64]
 
         for i, task in enumerate(self.inputs):
              self.inputs[i] = self.transform(task)
@@ -240,8 +240,6 @@ colors = {  0: [0., 0., 0.],  #black
 def convert_to_rgb(c):
     return torch.tensor(colors[c.item()]) #add item() to get the data from a zero dim tensor.
 
-import time
-print('started dataset: {}'.format(time.clock()))
 # dataset = ARCDataset('./ARC/data/', 'training', transform= all_transforms,no_of_demos=6) #, transform=transforms.Normalize(0., 10.)
 # loader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=0) # Error: Couldn't open shared event, when workers is 4, hmmm but also 1
 # from tqdm import tqdm
