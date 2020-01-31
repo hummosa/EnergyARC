@@ -6,6 +6,7 @@ from utils import *
 import wandb
 
 class RelationNetworks(nn.Module):
+    ''' Code modified from https://github.com/rosinality/relation-networks-pytorch '''
     def __init__(
         self,
         channels_out=64,
@@ -112,7 +113,7 @@ class RelationNetworks(nn.Module):
         f = self.f(g)
 
         # stats(f, 'f before')
-        f = torch.sigmoid(f)
+        # f = torch.sigmoid(f)
         # stats(f, 'f after ')
         
         # ef = torch.exp(f)

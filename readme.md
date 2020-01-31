@@ -1,38 +1,43 @@
 # Energy-based model for reasoning and transfer Reinforcement learning
 
+## Introduction
 
-## Introduction:
-Energy Based Models are a choice to model complex data and environments using one high-dimensional distribution, referred to as an energy surface. Realistic or desired data points are mapped to the valleys of the surface while unlikely data points are mapped to the peaks. Algorithms can now be devised to interact with this surface and influence its landscape. It easily admits other formulations to interface with the energy surface, and in this work we embed an RL agent as well as a dynamical sampler and allow them both to explore and influence its topology.  The goal of this work is to answer the question: can 'reasoning' be implemented by carving the slopes of the energy surface? Can we map abstract conceptual operations to the valleys and hills of the energy landscape?
+Energy Based Models (EBM) are a choice to model complex data and environments using one high-dimensional distribution, referred to as an energy surface. Realistic or desired data points are mapped to the valleys of the surface while unlikely data points are mapped to the peaks. The beauty comes from how easily it admits other formulations to interface with the energy surface, including composing multiple energy models, in addition to many other mathematicall constucts. This work combines and EBM with a Langevin dynamic sampler that surfs along the energy surface gradient, and an RL agent that can explore regions of the surface by interactions with the environment. Both the sampler and the RL agent can then synergistically  explore and carve the energy landscape, make reasoning about novel tasks more effective, rapid and 'intuitive'. The goal of this work is to answer the question: can 'reasoning' be implemented by shaping the slopes of the energy surface? i.e. can we map abstract conceptual operations to the valleys and hills of the energy landscape?
 
-Towards answering the question, we tackle the challenging Abstract Reasoning Corpus (ARC) dataset [1], released recently, to serve as a benchmark for reasoning agents. ARC comprises of 800 tasks on a 2D grid,  split into non-overlapping training and testing sets. The tasks are challenging and draw upon a wide range of priors about objects, dynamics, intentions, and perceptual patterns. For each task the agent has to experiment, sometimes extensively, and is required to examine a few demonstration input-output pairs and then infer the correct output to a test input.
+Towards answering the question, we tackle the challenging Abstract Reasoning Corpus ([ARC](https://github.com/fchollet/ARC/tree/1f68da7cf7c5b1849cef67f0e2d74680b42306a8)) dataset [1], released recently, to serve as a benchmark for reasoning agents. ARC comprises of 800 tasks on a 2D grid, split into non-overlapping training and testing sets. The tasks are challenging and draw upon a wide range of priors about objects, dynamics, intentions, and perceptual patterns. For each task the agent has to experiment, sometimes extensively. The agent is examines a few demonstration input-output pairs and then infer the correct output to a test input.
 
-The energy surface sampler takes several (reasoning) steps across the surface before producing an initial guess of how to perceive the task and the workplan to solve it. The RL agent takes this initial guess and explore its neighborhood. As the RL agent painstakingly finds solutions to more tasks, the sampler begins to provide better initial guesses for subsequent ones.
+The energy surface sampler takes several (reasoning) steps across the surface before producing a number of initial guesses of how to perceive the task and the workplan to solve it. The RL agent takes the initial guesses and explores their region. As the RL agent painstakingly finds solutions to more tasks, the sampler begins to provide better initial guesses for subsequent ones.
 
 The tasks are challenging and designed to require symbolic search similar to automated theorem proving systems, but here we devise a learning-based system which relies on these novel components:
-    - The demonstration correct outputs are never shown to the system, but rather converted into a reward signal for the RL agent as it tries to solve them.
-    - The RL agent has the ability to explore not only actions, but also different ways of perceiving the input grid.
-    - Following [2], we similarly use a task embedding that biases the model to form useful abstractions of tasks and objects in them.
 
-## Requirements:
+- ARC is does not contain enough data to support data-hungry deep learning methods. To compensate, the correct input-output pairs are never directly shown to the system, but rather converted into a reward signal for the RL agent as it tries to solve them.
+- Search for a solution in the search space is split between the EBM that provides many good initial guesses (multiple samples), and an RL agent that further explores the suggested neighborhoods.
+- The RL agent has the ability to explore not only actions, but also different ways of perceiving the input grid.
+- Following [2], we learn a task embedding that biases the model to form useful abstractions of tasks and concepts in them.
+
+## Requirements
 
 - [ARC](https://github.com/fchollet/ARC/tree/1f68da7cf7c5b1849cef67f0e2d74680b42306a8)
 - pytorch 1.4
-- wandb (to visualize model activations and weight distributions) 
+- wandb (to visualize model activations and weight distributions)
 - matplotlib
 - graphviz (for debugging)
 - pillow <= 6.2.0
 
+## Training
 
-## Training:
-To train the EBM and the sampler generatively, run trainarc.py. The RL agent, coming up soon, is however necessary to be able to solve any tasks, as the labels (correct output) are not given to the model at any point. It merely learns typical patterns of inputs and outputs. 
+To train the EBM and the sampler generatively, run trainarc.py. The RL agent, coming up soon, is however necessary to be able to solve any tasks, as the labels (correct output) are not given to the model at any point. It merely learns typical patterns of inputs and outputs. [Code](https://github.com/rosinality/igebm-pytorch.git) by @rosinality served as a starting point for our project. The algorithm involves taking the derivative of the energy functio with respect to inputs and coasting on the energy surface for several steps, and then taking the derivative of all those grandient steps with respect to the model parameters. The code implements methods to trace memory allocation, as well as using pytorch profiler tool to track CPU and GPU usage. Managing resources and using the simplest possible model are necessary for this approach. 
 
-## Results:
-Currently the energy model, and the sampler have been implemented and are able to learn a generative model of the task input output pairs. Now implementing the RL agent. 
+## Results
 
-## Next steps:
-Several previous works have integrated RL into an EBM formulation [3,4,5,6]. More recently, [7] showed that such integration does improve the ability of the model to transfer learning to novel tasks. 
+Currently the energy model, and the sampler have been implemented and are able to learn a generative model of the task input output pairs. Now implementing the RL agent.
 
-## References:
+## Next steps
+
+Several previous works have integrated RL into an EBM formulation [3,4,5,6]. More recently, [7] showed that such integration does improve the ability of the model to transfer learning to novel tasks.
+
+## References
+
 [1] François Chollet. On the measure of intelligence, 2019.
 
 [2] Igor Mordatch. Concept learning with energy-based models, 2018.

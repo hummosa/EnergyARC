@@ -23,8 +23,7 @@ use_wandb = False
 if use_wandb: import wandb
 if use_wandb: wandb.init(project="earc")
 
-# from model_arc import Ereason
-from model_rn import RelationNetworks
+from model_rn import RelationNetworks as Ereason
 
 def sample_data(loader, one_batch= False, loop= True, max_loops = 1000000):
     loader_iter = iter(loader)
@@ -59,9 +58,10 @@ torch.autograd.set_detect_anomaly(debug) # this slows down computations but allo
 def train(model, loader, alpha=0.1, step_size=0.1, sample_step=10, device=device, most_recent_time=most_recent_time):
     # tracemalloc.start(5)
     # snapshots = []
-    
+        
     parameters = model.parameters()
     optimizer = optim.Adam(parameters, lr=1e-4, betas=(0.0, 0.999))
+    w_init = torch.randn([512, 4, w_dim], device=device)
 
     for t, batch in loader: # [i/o, demos, batch,   c, w, h]
         # for each batch update the copy of the model, used for backward prop through the gradient
@@ -69,17 +69,16 @@ def train(model, loader, alpha=0.1, step_size=0.1, sample_step=10, device=device
             to_param.data.copy_(from_param)
         requires_grad(model_copy.parameters(), False)
         
-        w = nn.Parameter(torch.randn([len(batch[0]), 4, w_dim], device=device)) #not sure of the benefit of wrapping it in nn.Parameter
-        # w = torch.randn([len(batch[0]), 3, w_dim], device=device)
+        # w = nn.Parameter(torch.randn([len(batch[0]), 4, w_dim], device=device)) 
+        w = nn.Parameter(w_init[:len(batch[0])]) 
+        # w = torch.randn([len(batch[0]), 4, w_dim], device=device)
         w.requires_grad = True
 
         model.train()
 
         batch[0] = batch[0].to(device) # send input x0 to cuda
         batch[1] = batch[1].to(device) # send outputs x1 to cuda
-        print('batch loaded into {} after : '.format(device), time.process_time()-most_recent_time)        
-        most_recent_time = time.process_time()
-
+        
         '''############# Getting W across all demos ################'''
         for k in tqdm(range(sample_step)):
 
@@ -109,8 +108,6 @@ def train(model, loader, alpha=0.1, step_size=0.1, sample_step=10, device=device
                                                 #for each input-output in training set)
             x0, x1 = (batch[0][:,i], batch[1][:,i])
             
-            #init predicted answer x1_ to x0, alternatively start from noise.  torch.randn([batch_size, 2, 30, 30])
-            # TODO three alternatives:
             # x1_ = x0.detach().clone()
             x1_ = nn.Parameter(torch.rand_like(x0.detach()))
             # x1_ = torch.rand_like(x0.detach())
@@ -137,7 +134,6 @@ def train(model, loader, alpha=0.1, step_size=0.1, sample_step=10, device=device
                     # grad_norms.append(torch.norm((x1_grad)))
                     # print('grad_norm for step {}: {} '.format(k, grad_norms[k]))
                     # grad_viz_container.append(x1_grad)
-           
                 
                 # x1_= x1_ + (- 1000 * step_size* x1_grad)  # ! multiply by 100
                 x1_= x1_ + (- step_size* x1_grad)  # ! multiply by 100
@@ -192,10 +188,7 @@ def train(model, loader, alpha=0.1, step_size=0.1, sample_step=10, device=device
             # "latents": wandb.Histogram(w[0].detach().to('cpu').numpy()),
             })
             # wandb.run.summary.update({"gradients": wandb.Histogram(np_histogram=np.histogram(data))})
-        # else:
-            # wandb.log({
-            #     'model_loss': total_loss,
-            # })
+      
 
         # log occasionally
         # if t % 50 == 0:
@@ -239,8 +232,8 @@ def train(model, loader, alpha=0.1, step_size=0.1, sample_step=10, device=device
 import tracemalloc
 
 if __name__ == '__main__':
-    model = RelationNetworks(channels_out = conv_channels_dim,use_wandb=use_wandb).to(device)
-    model_copy = RelationNetworks(channels_out = conv_channels_dim).to(device)
+    model = Ereason(channels_out = conv_channels_dim,use_wandb=use_wandb).to(device)
+    model_copy = Ereason(channels_out = conv_channels_dim).to(device)
     if use_wandb: wandb.watch(model)
     
     dataset = dataset_arc.ARCDataset('./ARC/data/', 'both', transform= dataset_arc.all_transforms, no_of_demos=no_of_demos) #, transform=transforms.Normalize(0., 10.)
@@ -250,8 +243,8 @@ if __name__ == '__main__':
     most_recent_time = time.process_time()
     
 else:
-    model = RelationNetworks(channels_out = conv_channels_dim, use_wandb=use_wandb).to(device)
-    model_copy = RelationNetworks(channels_out = conv_channels_dim).to(device)
+    model = Ereason(channels_out = conv_channels_dim, use_wandb=use_wandb).to(device)
+    model_copy = Ereason(channels_out = conv_channels_dim).to(device)
 
 # with torch.autograd.profiler.profile(use_cuda = torch.cuda.is_available(), enabled=debug,) as prof: # record_shapes=True
     # with torch.backends.cudnn.flags(enabled=False):

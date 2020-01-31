@@ -7,36 +7,6 @@ import matplotlib.pyplot as plt
 
 training_data_path = './ARC/data/training'
 import os
-
-train = []
-training_json = os.listdir(training_data_path)
-for tj in training_json:
-    with open(os.path.join(training_data_path,tj)) as f:
-        data = json.load(f)
-        train.append(data)
-# %%
-# data['test'][0]['input']
-# %%
-# 
-# plt.imshow(data['train'][0]['output'])
-
-# %%
-items = []
-for item in train:
-    for train_item in item['train']:
-        items.append(train_item['input'])
-        items.append(train_item['output'])
-    for train_item in item['test']:
-        items.append(train_item['input'])
-        items.append(train_item['output'])
-
-items = np.array(items)
-#%
-sizes_x = [(len(xx)) for xx in items]
-sizes_y = [(len(xx[0])) for xx in items]
-#%
-
-
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
@@ -67,19 +37,8 @@ class ARCDataset(Dataset):
             tasks_evaluation = self.__load_split(self.root_dir + 'evaluation')
             self.tasks = (tasks_evaluation[0] + tasks_training[0], tasks_evaluation[1] + tasks_training[1])
 
-        # Limit to tasks with a number of demos below cut off given by no_of_demos
-        # convert tasks from a tuple of lists to a list of tuples
-        # tasks = []
-        # for i in range(len(self.tasks[0])):
-        #     tasks.append((self.tasks[0][i],self.tasks[1][i]))
-        # self.tasks = tasks
-
-        # self.tasks = [task for task in self.tasks if len(task) <= no_of_demos]
-
         self.transform = transform
-        
-
-        ## Preprocess
+           ## Preprocess
         # for i, task in enumerate(self.tasks):
         #     self.tasks[i] = self.transform(task)
 
@@ -100,9 +59,6 @@ class ARCDataset(Dataset):
         return len(self.inputs)
 
     def __getitem__(self, idx):
-        # if torch.is_tensor(idx):
-        #     idx = idx.tolist()
-
         sample = (self.inputs[idx], self.outputs[idx])
         return sample
 
@@ -207,24 +163,9 @@ all_transforms = transforms.Compose([Preprocess(), Padded_with_mask(), Padded_no
 # aa = arc[3]
 
 
-
-def sample_data(loader):
-    loader_iter = iter(loader)
-
-    while True:
-        try:
-            yield next(loader_iter)
-
-        except StopIteration:
-            loader_iter = iter(loader)
-            yield next(loader_iter)
-
 #%%
 
-# Load as 9 channels
-# layernorm??
-# drop out?
-# 
+# transoforms the 10 integer values into a 3 dim embedding
 colors = {  0: [0., 0., 0.],  #black
             1: [0., 0., 1.],  #blue
             2: [1., 0., 0.],  #red
@@ -240,19 +181,9 @@ colors = {  0: [0., 0., 0.],  #black
 def convert_to_rgb(c):
     return torch.tensor(colors[c.item()]) #add item() to get the data from a zero dim tensor.
 
-# dataset = ARCDataset('./ARC/data/', 'training', transform= all_transforms,no_of_demos=6) #, transform=transforms.Normalize(0., 10.)
-# loader = DataLoader(dataset, batch_size=128, shuffle=False, num_workers=0) # Error: Couldn't open shared event, when workers is 4, hmmm but also 1
-# from tqdm import tqdm
-# loader = tqdm(enumerate(sample_data(loader)))
-
-# loader_iter = iter(loader)
-# # #%%
-# enum, n = next(loader_iter)
-# n[0].shape # n[0] is inputs and n[1] is outputs
-
-# torch.Size([128, 6, 2, 30, 30])
 #%%
 def show_task(inputs, outputs, channels_first=True):
+    '''displays an ARC task, provided as a list of inputs and outputs'''
     fig = plt.figure(figsize=[8,17],facecolor=(0, 0, 0))
     no_of_demos = (inputs.shape[0])
     for i, (inp, out) in enumerate( zip(inputs, outputs)):
@@ -270,7 +201,3 @@ def show_task(inputs, outputs, channels_first=True):
         plt.axis('off')
     return fig
 
-#%%
-# show_task(n[0][2], n[1][2])   
-
-# %%
